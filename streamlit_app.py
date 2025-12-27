@@ -262,68 +262,100 @@ render_phone_ui()
 # Instruction (Centered)
 st.markdown("<div style='text-align: center; color: #666; font-size: 0.8em; margin-top: 10px;'>Visuals simulate iOS.</div>", unsafe_allow_html=True)
 # --- Instagram Logic ---
-# --- Instagram Logic (Nano Banana / Gemini Image Gen) ---
-def generate_imagen_image(topic, chat_log, api_key):
-    if not api_key:
-        return None
-        
-    genai.configure(api_key=api_key)
+# --- Instagram Logic (Native Python Rendering) ---
+from PIL import Image, ImageDraw, ImageFont
+import io
+import textwrap
+def generate_instagram_image(topic, chat_log):
+    # Canvas Settings (IG Portrait 4:5)
+    width = 1080
+    height = 1350
+    bg_color = (0, 0, 0)
+    text_color = (255, 255, 255)
+    blue_bubble = (10, 132, 255)
+    gray_bubble = (38, 38, 40)
     
-    # "Nano Banana" refers to the new Gemini 2.5 Flash Image capabilities
-    # Target Model: gemini-2.5-flash-image
+    img = Image.new('RGB', (width, height), color=bg_color)
+    d = ImageDraw.Draw(img)
+    
+    # Fonts
     try:
-        model = genai.GenerativeModel("gemini-2.5-flash-image")
+        # standard styling
+        font_main = ImageFont.truetype("arial.ttf", 36)
+        font_small = ImageFont.truetype("arial.ttf", 26)
+        font_header = ImageFont.truetype("arial.ttf", 48)
+    except IOError:
+        font_main = ImageFont.load_default()
+        font_small = ImageFont.load_default()
+        font_header = ImageFont.load_default()
+    # Draw Header
+    d.text((50, 50), "Friends Syndicate ☕️", font=font_header, fill=text_color)
+    d.text((50, 120), f"Topic: {topic[:40]}...", font=font_small, fill=(142, 142, 147))
+    
+    # Draw Chat
+    y = 220
+    margin = 50
+    bubble_padding = 25
+    max_bubble_width = 750
+    
+    for entry in chat_log:
+        if entry["agent"] in ["Manager", "Critic"]: continue
         
-        # Construct Prompt for the Screenshot
-        # We pass the EXACT text from the chat log so the visual matches
-        dialogue_text = "\n".join([f"{entry['agent']}: {entry['message']}" for entry in chat_log if entry['agent'] not in ['Manager', 'Critic']])
+        msg = entry["message"]
+        name = entry["agent"]
         
-        prompt = f"""
-        Generate a photorealistic iPhone screenshot of an iMessage group chat.
-        Dark Mode.
-        Group Name: "Friends Syndicate ☕️"
+        # 1. Wrap Text
+        lines = textwrap.wrap(msg, width=40) 
         
-        The chat contains exactly these messages:
-        {dialogue_text}
+        # 2. Calculate Bubble Dimensions
+        line_height = 44
+        text_block_height = len(lines) * line_height
+        bubble_h = text_block_height + (bubble_padding * 2)
         
-        Visual Style:
-        - Blue bubbles on the right (Chandler).
-        - Gray bubbles on the left (Joey/Ross).
-        - High fidelity text rendering. The text inside bubbles must be legible and match the input exactly.
-        - 4:5 Portrait Aspect Ratio.
-        """
+        # 3. Draw
+        if name == "Chandler":
+            x = width - max_bubble_width - margin
+            color = blue_bubble
+            
+            d.rounded_rectangle([x, y, x + max_bubble_width, y + bubble_h], radius=35, fill=color)
+            
+            cy = y + bubble_padding
+            for line in lines:
+                d.text((x + bubble_padding, cy), line, font=font_main, fill=text_color)
+                cy += line_height
+        else:
+            x = margin
+            color = gray_bubble
+            
+            d.text((x + 10, y - 35), name, font=font_small, fill=(142, 142, 147))
+            d.rounded_rectangle([x, y, x + max_bubble_width, y + bubble_h], radius=35, fill=color)
+            
+            cy = y + bubble_padding
+            for line in lines:
+                d.text((x + bubble_padding, cy), line, font=font_main, fill=text_color)
+                cy += line_height
         
-        result = model.generate_images(
-            prompt=prompt,
-            number_of_images=1,
-            aspect_ratio="4:5",
-            safety_filter="block_only_high"
-        )
-        return result.images[0].image
-    except Exception as e:
-        st.error(f"Nano Banana Error: {e}")
-        return None
+        y += bubble_h + 60
+    return img
 st.divider()
 # "Post to Instagram" Button Logic
-if st.button("📸 Create Instagram Post (Nano Banana)", type="secondary", use_container_width=True):
+if st.button("📸 Create Instagram Post", type="secondary", use_container_width=True):
     if st.session_state.chat_log:
-        if not api_key:
-            st.error("You need a Gemini API Key to use Nano Banana!")
-        else:
-            with st.spinner("Generating screenshot with Nano Banana (Gemini 2.5)..."):
-                img = generate_imagen_image(st.session_state.topic, st.session_state.chat_log, api_key)
-                if img:
-                    st.image(img, caption="Generated by Nano Banana", use_container_width=True)
-                    
-                    buf = io.BytesIO()
-                    img.save(buf, format="PNG")
-                    byte_im = buf.getvalue()
-                    
-                    st.download_button(
-                        label="Download Image",
-                        data=byte_im,
-                        file_name="friends_nano_banana.png",
-                        mime="image/png"
-                    )
+        with st.spinner("Generating High-Res Screenshot..."):
+            img = generate_instagram_image(st.session_state.topic, st.session_state.chat_log)
+            # Show in UI
+            st.image(img, caption="Ready for Instagram!", use_container_width=True)
+            
+            # Download Button
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            byte_im = buf.getvalue()
+            
+            st.download_button(
+                label="Download Image",
+                data=byte_im,
+                file_name="friends_chat.png",
+                mime="image/png"
+            )
     else:
         st.warning("Generate a chat first!")
