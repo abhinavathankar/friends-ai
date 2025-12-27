@@ -138,7 +138,7 @@ def generate_ai_response(agent_name, topic, chat_history, api_key):
         return None  # Fallback to mock if no key
     genai.configure(api_key=api_key)
     # UPDATED MODEL VERSION
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-3-flash')
     
     # Construct Context
     history_text = "\n".join([f"{entry['agent']}: {entry['message']}" for entry in chat_history])
@@ -360,3 +360,4 @@ if st.button("📸 Create Instagram Post", type="secondary", use_container_width
             )
     else:
         st.warning("Generate a chat first!")
+
