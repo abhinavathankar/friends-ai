@@ -280,23 +280,23 @@ def generate_instagram_image(topic, chat_log):
     
     # Fonts
     try:
-        # standard styling
-        font_main = ImageFont.truetype("arial.ttf", 36)
-        font_small = ImageFont.truetype("arial.ttf", 26)
-        font_header = ImageFont.truetype("arial.ttf", 48)
+        # Standard styling - Increased sizes per user request
+        font_main = ImageFont.truetype("arial.ttf", 42)
+        font_small = ImageFont.truetype("arial.ttf", 32)
+        font_header = ImageFont.truetype("arial.ttf", 60)
     except IOError:
         font_main = ImageFont.load_default()
         font_small = ImageFont.load_default()
         font_header = ImageFont.load_default()
     # Draw Header
     d.text((50, 50), "Friends Syndicate ☕️", font=font_header, fill=text_color)
-    d.text((50, 120), f"Topic: {topic[:40]}...", font=font_small, fill=(142, 142, 147))
+    d.text((50, 130), f"Topic: {topic[:35]}...", font=font_small, fill=(142, 142, 147))
     
     # Draw Chat
-    y = 220
+    y = 250
     margin = 50
-    bubble_padding = 25
-    max_bubble_width = 750
+    bubble_padding = 30
+    max_bubble_width = 800
     
     for entry in chat_log:
         if entry["agent"] in ["Manager", "Critic"]: continue
@@ -305,10 +305,11 @@ def generate_instagram_image(topic, chat_log):
         name = entry["agent"]
         
         # 1. Wrap Text
-        lines = textwrap.wrap(msg, width=40) 
+        # Reduced width char limit because font is bigger
+        lines = textwrap.wrap(msg, width=35) 
         
         # 2. Calculate Bubble Dimensions
-        line_height = 44
+        line_height = 52 # formatting space
         text_block_height = len(lines) * line_height
         bubble_h = text_block_height + (bubble_padding * 2)
         
