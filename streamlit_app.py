@@ -3,10 +3,8 @@ import random
 import time
 import feedparser
 import google.generativeai as genai
-
 # --- Setup & Configuration ---
 st.set_page_config(page_title="Friends Comedy Syndicate", page_icon="☕", layout="centered")
-
 # --- Custom CSS for Phone UI ---
 st.markdown("""
 <style>
@@ -23,7 +21,6 @@ st.markdown("""
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         box-shadow: 0px 20px 50px rgba(0,0,0,0.5);
     }
-
     /* Notch/Header area */
     .phone-header {
         background-color: #1c1c1e00; /* Transparent-ish */
@@ -51,7 +48,6 @@ st.markdown("""
         font-size: 11px;
         color: #8e8e93;
     }
-
     /* Chat Area */
     .chat-container {
         height: 100%;
@@ -66,7 +62,6 @@ st.markdown("""
     .chat-container::-webkit-scrollbar { 
         display: none; /* Hide scrollbar Chrome/Safari */
     }
-
     /* Bubbles */
     .message-row {
         display: flex;
@@ -112,7 +107,6 @@ st.markdown("""
         font-size: 12px;
         margin: 10px 0;
     }
-
     /* Animations */
     @keyframes popIn {
         0% { opacity: 0; transform: translateY(10px) scale(0.95); }
@@ -121,12 +115,9 @@ st.markdown("""
     .message-row {
         animation: popIn 0.3s ease-out forwards;
     }
-
 </style>
 """, unsafe_allow_html=True)
-
 # --- Real AI & Data Logic ---
-
 def fetch_real_trending_topic():
     """Fetches real trending topics from Google Trends RSS."""
     try:
@@ -141,12 +132,10 @@ def fetch_real_trending_topic():
     
     # Fallback if offline
     return random.choice(["Artificial Intelligence", "The Metaverse", "Crypto Crash", "Mars Colonization"])
-
 def generate_ai_response(agent_name, topic, chat_history, api_key):
     """Uses Gemini API to generate a response in character."""
     if not api_key:
         return None  # Fallback to mock if no key
-
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel('gemini-pro')
     
@@ -174,7 +163,6 @@ def generate_ai_response(agent_name, topic, chat_history, api_key):
         return response.text.strip()
     except Exception as e:
         return f"[AI Error: {str(e)}]"
-
 # --- Mock Logic (Fallback) ---
 class MockAgent:
     def __init__(self, name):
@@ -183,28 +171,20 @@ class MockAgent:
     def speak(self, topic, chat_history):
         # Fallback simplistic logic
         return f"I have no API key, but I have opinions on {topic}."
-
 # --- Main App Logic ---
-
 # Secrets Management
-api_key = None
-
-# 1. Try fetching from Streamlit Secrets (for Cloud Deployment)
-if "GEMINI_API_KEY" in st.secrets:
+try:
     api_key = st.secrets["GEMINI_API_KEY"]
-else:
-    # 2. Fallback to Sidebar Input (for Local Testing)
-    with st.sidebar:
-        st.header("Settings")
-        api_key = st.text_input("Gemini API Key", type="password", placeholder="Enter key for Real AI")
-        if not api_key:
-            st.info("💡 Tip: Add 'GEMINI_API_KEY' to Streamlit Secrets to skip this.")
-
+except FileNotFoundError:
+    # Local run without secrets.toml
+    api_key = None
+except KeyError:
+    # Secrets file exists but key is missing
+    api_key = None
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 if "topic" not in st.session_state:
     st.session_state.topic = ""
-
 # Generate Button
 with st.sidebar:
     st.header("Control Panel")
@@ -239,8 +219,6 @@ with st.sidebar:
             # Save to state
             st.session_state.topic = topic
             st.session_state.chat_log = current_log
-
-
 # --- Render UI ---
 def render_phone_ui():
     chat_html = ""
@@ -265,7 +243,6 @@ def render_phone_ui():
 <div class='sender-name'>{name}</div>
 <div class='bubble bubble-left'>{msg}</div>
 </div>"""
-
     # Wrap in Phone Frame
     topic_display = st.session_state.topic if st.session_state.topic else "Waiting..."
     full_html = f"""<div class='phone-frame'>
@@ -279,8 +256,6 @@ def render_phone_ui():
 </div>"""
     
     st.markdown(full_html, unsafe_allow_html=True)
-
 render_phone_ui()
-
 # Instruction (Centered)
 st.markdown("<div style='text-align: center; color: #666; font-size: 0.8em; margin-top: 10px;'>Enter API Key in sidebar for REAL AI generation. Visuals simulate iOS.</div>", unsafe_allow_html=True)
