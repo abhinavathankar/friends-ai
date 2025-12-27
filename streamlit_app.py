@@ -137,7 +137,7 @@ def generate_ai_response(agent_name, topic, chat_history, api_key):
     if not api_key:
         return None  # Fallback to mock if no key
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-3-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     # Construct Context
     history_text = "\n".join([f"{entry['agent']}: {entry['message']}" for entry in chat_history])
@@ -260,4 +260,5 @@ def render_phone_ui():
 render_phone_ui()
 # Instruction (Centered)
 st.markdown("<div style='text-align: center; color: #666; font-size: 0.8em; margin-top: 10px;'>Enter API Key in sidebar for REAL AI generation. Visuals simulate iOS.</div>", unsafe_allow_html=True)
+
 
