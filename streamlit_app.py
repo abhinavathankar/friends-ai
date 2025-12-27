@@ -203,8 +203,9 @@ with st.sidebar:
             current_log.append({"agent": "Manager", "message": f"Topic: {topic}"})
             
             for _ in range(4): # 4 turns
-                available = [a for a in agents if a.name != last_speaker]
-                speaker_name = random.choice(agents)
+                # Agents are strings now ["Joey", "Chandler", "Ross"]
+                available = [a for a in agents if a != last_speaker]
+                speaker_name = random.choice(available)
                 
                 if api_key:
                     # REAL AI
